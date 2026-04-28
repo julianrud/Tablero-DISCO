@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FORM — Coordinación</title>
+<title>TABLERO LÍDERES — Coordinación</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
@@ -40,12 +40,13 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;font
 .fbtn{font-size:11px;font-weight:500;padding:3px 11px;border-radius:20px;border:1px solid var(--bor2);background:var(--sur2);color:var(--mut);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
 .fbtn:hover{background:var(--bor)}
 .fbtn.on{background:var(--txt);color:#fff;border-color:var(--txt)}
-.fbtn.fa-ventas.on{background:var(--vdt);border-color:var(--vdt)}
-.fbtn.fa-mkt.on{background:var(--mdt);border-color:var(--mdt)}
-.fbtn.fa-serv.on{background:var(--sdt);border-color:var(--sdt)}
-.fbtn.fa-mant.on{background:var(--ndt);border-color:var(--ndt)}
-.fbtn.fa-ch.on{background:var(--cdt);border-color:var(--cdt)}
-.fbtn.fa-adm.on{background:var(--adt);border-color:var(--adt)}
+.fbtn.fa-room.on{background:var(--vdt);border-color:var(--vdt)}
+.fbtn.fa-sur.on{background:var(--mdt);border-color:var(--mdt)}
+.fbtn.fa-bleu.on{background:var(--sdt);border-color:var(--sdt)}
+.fbtn.fa-barto.on{background:var(--ndt);border-color:var(--ndt)}
+.fbtn.fa-puerta7.on{background:var(--cdt);border-color:var(--cdt)}
+.fbtn.fa-elogio.on{background:var(--adt);border-color:var(--adt)}
+.fbtn.fa-otro.on{background:#555550;border-color:#555550}
 .fsep{width:1px;height:18px;background:var(--bor);margin:0 3px}
 
 #sbar{padding:9px 24px;background:var(--sur);border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
@@ -181,6 +182,8 @@ textarea.finput{resize:vertical;min-height:76px;line-height:1.5}
 .a-mant{background:var(--nbg);color:var(--ntx)}
 .a-ch{background:var(--cbg);color:var(--ctx)}
 .a-adm{background:var(--abg);color:var(--atx)}
+.a-otro{background:#f0efe9;color:#555550}
+.t-otro{background:#f0efe9;color:#555550}
 
 .toast{position:fixed;bottom:22px;right:22px;background:var(--txt);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;z-index:999;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
@@ -195,7 +198,7 @@ textarea.finput{resize:vertical;min-height:76px;line-height:1.5}
 
 <!-- HEADER -->
 <div class="hdr">
-  <div class="logo">FORM</div>
+  <div class="logo">TABLERO LÍDERES</div>
   <div class="hdr-right">
     <div class="vtoggle">
       <button class="vbtn on" id="btn-kanban"    onclick="setView('kanban')">☰ Kanban</button>
@@ -212,13 +215,14 @@ textarea.finput{resize:vertical;min-height:76px;line-height:1.5}
 
 <!-- FILTROS -->
 <div class="fbar">
-  <span class="flbl">Área</span>
-  <button class="fbtn fa-ventas" onclick="toggleF('ventas')">Ventas</button>
-  <button class="fbtn fa-mkt"    onclick="toggleF('mkt')">Marketing</button>
-  <button class="fbtn fa-serv"   onclick="toggleF('serv')">Servicio</button>
-  <button class="fbtn fa-mant"   onclick="toggleF('mant')">Mant. y limpieza</button>
-  <button class="fbtn fa-ch"     onclick="toggleF('ch')">Capital humano</button>
-  <button class="fbtn fa-adm"    onclick="toggleF('adm')">Adm. y finanzas</button>
+  <span class="flbl">Unidad</span>
+  <button class="fbtn fa-room"    onclick="toggleF('room')">ROOM</button>
+  <button class="fbtn fa-sur"     onclick="toggleF('sur')">SUR</button>
+  <button class="fbtn fa-bleu"    onclick="toggleF('bleu')">BLEU</button>
+  <button class="fbtn fa-barto"   onclick="toggleF('barto')">BARTO</button>
+  <button class="fbtn fa-puerta7" onclick="toggleF('puerta7')">PUERTA 7</button>
+  <button class="fbtn fa-elogio"  onclick="toggleF('elogio')">ELOGIO</button>
+  <button class="fbtn fa-otro"    onclick="toggleF('otro')">OTRO</button>
   <div class="fsep"></div>
   <span class="flbl">Prioridad</span>
   <button class="fbtn fp-alta"   onclick="toggleP('alta')">Alta</button>
@@ -306,14 +310,15 @@ textarea.finput{resize:vertical;min-height:76px;line-height:1.5}
     </div>
     <div class="frow">
       <div class="fgroup">
-        <label class="flbl2">Área</label>
+        <label class="flbl2">Unidad de negocio</label>
         <select class="finput" id="fa">
-          <option value="ventas">Ventas</option>
-          <option value="mkt">Marketing</option>
-          <option value="serv">Servicio</option>
-          <option value="mant">Mantenimiento y limpieza</option>
-          <option value="ch">Capital humano</option>
-          <option value="adm">Adm. y finanzas</option>
+          <option value="room">ROOM</option>
+          <option value="sur">SUR</option>
+          <option value="bleu">BLEU</option>
+          <option value="barto">BARTO</option>
+          <option value="puerta7">PUERTA 7</option>
+          <option value="elogio">ELOGIO</option>
+          <option value="otro">OTRO</option>
         </select>
       </div>
       <div class="fgroup">
@@ -371,12 +376,13 @@ const COLS = [
   {id:'done',    lbl:'Listo'}
 ];
 const AM = {
-  ventas: {lbl:'Ventas',           cls:'a-ventas', tc:'t-ventas', dot:'#4a8a1a'},
-  mkt:    {lbl:'Marketing',        cls:'a-mkt',    tc:'t-mkt',    dot:'#2070c0'},
-  serv:   {lbl:'Servicio',         cls:'a-serv',   tc:'t-serv',   dot:'#c87000'},
-  mant:   {lbl:'Mant. y limpieza', cls:'a-mant',   tc:'t-mant',   dot:'#c83030'},
-  ch:     {lbl:'Capital humano',   cls:'a-ch',     tc:'t-ch',     dot:'#6040c0'},
-  adm:    {lbl:'Adm. y finanzas',  cls:'a-adm',    tc:'t-adm',    dot:'#1a9060'}
+  room:    {lbl:'ROOM',    cls:'a-ventas', tc:'t-ventas', dot:'#4a8a1a'},
+  sur:     {lbl:'SUR',     cls:'a-mkt',    tc:'t-mkt',    dot:'#2070c0'},
+  bleu:    {lbl:'BLEU',    cls:'a-serv',   tc:'t-serv',   dot:'#c87000'},
+  barto:   {lbl:'BARTO',   cls:'a-mant',   tc:'t-mant',   dot:'#c83030'},
+  puerta7: {lbl:'PUERTA 7',cls:'a-ch',     tc:'t-ch',     dot:'#6040c0'},
+  elogio:  {lbl:'ELOGIO',  cls:'a-adm',    tc:'t-adm',    dot:'#1a9060'},
+  otro:    {lbl:'OTRO',    cls:'a-otro',   tc:'t-otro',   dot:'#888882'}
 };
 const NXT = {todo:'doing', doing:'waiting', waiting:'done', done:null};
 const PRV = {todo:null, doing:'todo', waiting:'doing', done:'waiting'};
@@ -736,7 +742,7 @@ function openAdd(col){
   document.getElementById('mttl').textContent='Nueva tarea';
   ['ft','fd','fo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ff').value='';
-  document.getElementById('fa').value='ventas';
+  document.getElementById('fa').value='room';
   document.getElementById('fp').value='media';
   document.getElementById('overlay').classList.add('on');
   setTimeout(()=>document.getElementById('ft').focus(),80);
