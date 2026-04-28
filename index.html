@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORM — Coordinación</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f3; --sur:#fff; --sur2:#f0efe9; --bor:#e4e2da; --bor2:#d0cec5;
+  --txt:#1a1a18; --mut:#888882; --sub:#b8b6af;
+  --vbg:#eaf3de; --vtx:#2d5a0e; --vdt:#4a8a1a;
+  --mbg:#ddeeff; --mtx:#0d4a8a; --mdt:#2070c0;
+  --sbg:#fef3e2; --stx:#7a4800; --sdt:#c87000;
+  --nbg:#fde8e8; --ntx:#8a1a1a; --ndt:#c83030;
+  --cbg:#ede8fb; --ctx:#3d2090; --cdt:#6040c0;
+  --abg:#e0f5ef; --atx:#0a5a3a; --adt:#1a9060;
+  --altabg:#fde8e8; --altatx:#8a1a1a;
+  --mediabg:#fef3e2; --mediatx:#7a4800;
+  --bajabg:#eaf3de; --bajatx:#2d5a0e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+
+.hdr{background:var(--sur);border-bottom:1px solid var(--bor);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:.1em}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vtoggle{display:flex;background:var(--sur2);border:1px solid var(--bor);border-radius:8px;overflow:hidden}
+.vbtn{font-size:11px;font-weight:500;padding:6px 12px;border:none;background:transparent;color:var(--mut);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.vbtn.on{background:var(--sur);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.btn{font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap;border:1px solid}
+.btn-dark{background:var(--txt);color:#fff;border-color:var(--txt)}.btn-dark:hover{opacity:.85}
+.btn-wa{background:#25d366;color:#fff;border-color:#25d366;display:flex;align-items:center;gap:5px}.btn-wa:hover{opacity:.88}
+.btn-wa svg{width:13px;height:13px}
+
+.fbar{background:var(--sur);border-bottom:1px solid var(--bor);padding:9px 24px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.flbl{font-size:11px;color:var(--mut);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.fbtn{font-size:11px;font-weight:500;padding:3px 11px;border-radius:20px;border:1px solid var(--bor2);background:var(--sur2);color:var(--mut);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.fbtn:hover{background:var(--bor)}
+.fbtn.on{background:var(--txt);color:#fff;border-color:var(--txt)}
+.fbtn.fa-ventas.on{background:var(--vdt);border-color:var(--vdt)}
+.fbtn.fa-mkt.on{background:var(--mdt);border-color:var(--mdt)}
+.fbtn.fa-serv.on{background:var(--sdt);border-color:var(--sdt)}
+.fbtn.fa-mant.on{background:var(--ndt);border-color:var(--ndt)}
+.fbtn.fa-ch.on{background:var(--cdt);border-color:var(--cdt)}
+.fbtn.fa-adm.on{background:var(--adt);border-color:var(--adt)}
+.fsep{width:1px;height:18px;background:var(--bor);margin:0 3px}
+
+#sbar{padding:9px 24px;background:var(--sur);border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.snum{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--txt);margin-right:3px}
+.snum.green{color:#16a34a} .snum.red{color:var(--ndt)}
+
+/* KANBAN */
+.board{padding:16px 16px 40px;overflow-x:auto}
+.cols{display:grid;grid-template-columns:repeat(4,minmax(250px,1fr));gap:12px;min-width:780px}
+.col{background:var(--sur2);border-radius:12px;padding:10px}
+.col-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.col-ttl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.col-cnt{font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);background:var(--sur);border:1px solid var(--bor);border-radius:20px;padding:1px 8px}
+
+.card{background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:12px;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--bor2);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card.hide{display:none}
+.ctop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
+.apill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.ppill{font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace}
+.p-alta{background:var(--altabg);color:var(--altatx)}
+.p-media{background:var(--mediabg);color:var(--mediatx)}
+.p-baja{background:var(--bajabg);color:var(--bajatx)}
+.ctitle{font-size:13px;color:var(--txt);line-height:1.45;margin-bottom:9px}
+.cfields{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:7px 9px;background:var(--sur2);border-radius:6px;margin-bottom:9px}
+.flabel{font-size:9px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--sub);margin-bottom:2px}
+.fval{font-size:12px;font-weight:500;color:var(--txt)}
+.fval.urg{color:var(--ndt)}
+
+.dtoggle{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mut);background:none;border:none;cursor:pointer;padding:0 0 7px;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.dtoggle:hover{color:var(--txt)}
+.darr{font-size:9px;transition:transform .2s;color:var(--sub)}
+.dtoggle.on .darr{transform:rotate(90deg)}
+.dbody{overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s}
+.dbody.on{max-height:300px;opacity:1;margin-bottom:9px}
+.dinner{font-size:12px;color:var(--mut);line-height:1.65;padding:9px 11px;background:var(--sur2);border-radius:6px;border-left:2px solid var(--bor2)}
+
+.cacts{display:flex;gap:5px}
+.mbtn{flex:1;font-size:11px;color:var(--mut);background:var(--sur2);border:1px solid var(--bor);border-radius:6px;padding:4px 6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;transition:all .12s}
+.mbtn:hover{background:var(--bor);color:var(--txt)}
+.ebtn,.dbtn{font-size:11px;color:var(--sub);background:none;border:1px solid var(--bor);border-radius:6px;padding:4px 7px;cursor:pointer;transition:all .12s}
+.ebtn:hover{background:var(--sur2);color:var(--txt)}
+.dbtn:hover{background:var(--altabg);color:var(--altatx);border-color:var(--altabg)}
+.addbtn{width:100%;font-size:12px;color:var(--sub);background:transparent;border:1px dashed var(--bor2);border-radius:8px;padding:8px;cursor:pointer;margin-top:4px;font-family:'DM Sans',sans-serif;transition:all .12s}
+.addbtn:hover{background:var(--sur);color:var(--txt);border-style:solid}
+
+/* CALENDAR */
+.calwrap{padding:20px 24px 48px}
+.callayout{display:flex;gap:18px;align-items:flex-start}
+.calmain{flex:1;min-width:0}
+.calside{width:240px;flex-shrink:0}
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.calmon{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.calnavbtns{display:flex;gap:6px}
+.calnbtn{font-size:12px;padding:5px 12px;border-radius:7px;border:1px solid var(--bor2);background:var(--sur);cursor:pointer;font-family:'DM Sans',sans-serif}
+.calnbtn:hover{background:var(--sur2)}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bor);border:1px solid var(--bor);border-radius:12px;overflow:hidden}
+.caldow{background:var(--sur2);padding:8px 0;text-align:center;font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.calday{background:var(--sur);min-height:95px;padding:6px;transition:background .12s}
+.calday:hover{background:#fafaf8}
+.calday.other{background:#f9f8f5}
+.calday.today .cdnum{background:var(--txt);color:#fff;border-radius:50%}
+.cdnum{font-size:12px;font-weight:500;width:22px;height:22px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;border-radius:50%}
+.calday.other .cdnum{color:var(--sub)}
+.ctask{font-size:10px;font-weight:500;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctask:hover{opacity:.8}
+.ctask.t-ventas{background:var(--vbg);color:var(--vtx)}
+.ctask.t-mkt{background:var(--mbg);color:var(--mtx)}
+.ctask.t-serv{background:var(--sbg);color:var(--stx)}
+.ctask.t-mant{background:var(--nbg);color:var(--ntx)}
+.ctask.t-ch{background:var(--cbg);color:var(--ctx)}
+.ctask.t-adm{background:var(--abg);color:var(--atx)}
+.cmore{font-size:10px;color:var(--mut);padding:1px 3px;cursor:pointer}
+.csttl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+.cscard{background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:10px 11px;margin-bottom:7px;cursor:pointer;transition:border-color .15s}
+.cscard:hover{border-color:var(--bor2)}
+.csdate{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:4px}
+.csdate.ov{background:var(--altabg);color:var(--altatx)}
+.csdate.tod{background:var(--txt);color:#fff}
+.csdate.sn{background:var(--mediabg);color:var(--mediatx)}
+.csdate.lt{background:var(--sur2);color:var(--mut)}
+
+/* DASHBOARD */
+.dashwrap{padding:20px 24px 48px}
+.dashttl{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:18px}
+.kpigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.kpi{background:var(--sur);border:1px solid var(--bor);border-radius:11px;padding:16px 18px}
+.kpilbl{font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:7px}
+.kpinum{font-family:'Syne',sans-serif;font-size:34px;font-weight:700;line-height:1;margin-bottom:3px}
+.kpisub{font-size:11px;color:var(--mut)}
+.kpinum.g{color:#16a34a} .kpinum.r{color:var(--ndt)} .kpinum.a{color:#d97706}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.pcard{background:var(--sur);border:1px solid var(--bor);border-radius:11px;padding:18px 20px}
+.pttl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+.circwrap{display:flex;align-items:center;gap:18px}
+.circle-bg{fill:none;stroke:var(--sur2);stroke-width:10}
+.circle-fg{fill:none;stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .6s ease}
+.clbl{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;fill:var(--txt);dominant-baseline:central;text-anchor:middle}
+.csub{font-size:11px;fill:var(--mut);dominant-baseline:central;text-anchor:middle}
+.barrow{margin-bottom:11px}
+.barrow:last-child{margin-bottom:0}
+.barmeta{display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px}
+.barpct{font-family:'DM Mono',monospace;font-size:11px;color:var(--mut)}
+.barbg{height:6px;background:var(--sur2);border-radius:3px;overflow:hidden}
+.barfill{height:100%;border-radius:3px;transition:width .5s ease}
+.adot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.priobars{display:flex;gap:8px;height:80px;align-items:flex-end;margin-top:6px}
+.pbcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pbfill{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .5s ease}
+.pblbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--mut);text-transform:uppercase}
+.pbnum{font-size:11px;font-weight:500;color:var(--txt)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.modal{background:var(--sur);border-radius:15px;border:1px solid var(--bor);padding:24px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.12);max-height:90vh;overflow-y:auto}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.mclose{font-size:17px;background:none;border:none;cursor:pointer;color:var(--mut);padding:2px 6px;border-radius:4px}
+.mclose:hover{background:var(--sur2)}
+.fgroup{margin-bottom:13px}
+.flbl2{display:block;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:5px}
+.finput{width:100%;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--bor2);border-radius:8px;background:var(--bg);color:var(--txt);outline:none;transition:border-color .15s}
+.finput:focus{border-color:var(--txt)}
+textarea.finput{resize:vertical;min-height:76px;line-height:1.5}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mftr{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--bor)}
+
+/* area colors */
+.a-ventas{background:var(--vbg);color:var(--vtx)}
+.a-mkt{background:var(--mbg);color:var(--mtx)}
+.a-serv{background:var(--sbg);color:var(--stx)}
+.a-mant{background:var(--nbg);color:var(--ntx)}
+.a-ch{background:var(--cbg);color:var(--ctx)}
+.a-adm{background:var(--abg);color:var(--atx)}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--txt);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;z-index:999;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none}
+.toast.on{opacity:1;transform:translateY(0)}
+.empty{text-align:center;padding:40px 20px;color:var(--sub);font-size:13px;font-style:italic}
+
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fi .18s ease both}
+@media(max-width:860px){.callayout{flex-direction:column}.calside{width:100%}.pgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">FORM</div>
+  <div class="hdr-right">
+    <div class="vtoggle">
+      <button class="vbtn on" id="btn-kanban"    onclick="setView('kanban')">☰ Kanban</button>
+      <button class="vbtn"    id="btn-calendar"  onclick="setView('calendar')">◫ Calendario</button>
+      <button class="vbtn"    id="btn-dashboard" onclick="setView('dashboard')">◈ Dashboard</button>
+    </div>
+    <button class="btn btn-wa" onclick="sendWA()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      Compartir
+    </button>
+    <button class="btn btn-dark" onclick="openAdd('todo')">+ Nueva tarea</button>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="fbar">
+  <span class="flbl">Área</span>
+  <button class="fbtn fa-ventas" onclick="toggleF('ventas')">Ventas</button>
+  <button class="fbtn fa-mkt"    onclick="toggleF('mkt')">Marketing</button>
+  <button class="fbtn fa-serv"   onclick="toggleF('serv')">Servicio</button>
+  <button class="fbtn fa-mant"   onclick="toggleF('mant')">Mant. y limpieza</button>
+  <button class="fbtn fa-ch"     onclick="toggleF('ch')">Capital humano</button>
+  <button class="fbtn fa-adm"    onclick="toggleF('adm')">Adm. y finanzas</button>
+  <div class="fsep"></div>
+  <span class="flbl">Prioridad</span>
+  <button class="fbtn fp-alta"   onclick="toggleP('alta')">Alta</button>
+  <button class="fbtn fp-media"  onclick="toggleP('media')">Media</button>
+  <button class="fbtn fp-baja"   onclick="toggleP('baja')">Baja</button>
+</div>
+
+<!-- STATS -->
+<div id="sbar"></div>
+
+<!-- VIEWS -->
+<div id="view-kanban">
+  <div class="board"><div class="cols" id="board"></div></div>
+</div>
+<div id="view-calendar" style="display:none">
+  <div class="calwrap">
+    <div class="callayout">
+      <div class="calmain">
+        <div class="calnav">
+          <span class="calmon" id="calmon"></span>
+          <div class="calnavbtns">
+            <button class="calnbtn" onclick="calPrev()">← Anterior</button>
+            <button class="calnbtn" onclick="calToday()">Hoy</button>
+            <button class="calnbtn" onclick="calNext()">Siguiente →</button>
+          </div>
+        </div>
+        <div class="calgrid" id="calgrid"></div>
+      </div>
+      <div class="calside">
+        <div class="csttl">Próximos vencimientos</div>
+        <div id="calupcoming"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="view-dashboard" style="display:none">
+  <div class="dashwrap">
+    <div class="dashttl">Dashboard de avance</div>
+    <div class="kpigrid" id="kpis"></div>
+    <div class="pgrid">
+      <div class="pcard">
+        <div class="pttl">Completado general</div>
+        <div class="circwrap">
+          <svg width="108" height="108" viewBox="0 0 108 108">
+            <circle class="circle-bg" cx="54" cy="54" r="44"/>
+            <circle class="circle-fg" id="circfg" cx="54" cy="54" r="44" stroke="#22c55e" stroke-dasharray="276.5" stroke-dashoffset="276.5"/>
+            <text class="clbl" x="54" y="49" id="circpct">0%</text>
+            <text class="csub" x="54" y="65">completado</text>
+          </svg>
+          <div id="colbars"></div>
+        </div>
+      </div>
+      <div class="pcard">
+        <div class="pttl">Por área</div>
+        <div id="areabars"></div>
+      </div>
+    </div>
+    <div class="pgrid" style="margin-bottom:0">
+      <div class="pcard">
+        <div class="pttl">Por prioridad</div>
+        <div class="priobars" id="priobars"></div>
+      </div>
+      <div class="pcard">
+        <div class="pttl">Por responsable</div>
+        <div id="ownerbars"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhdr">
+      <span class="mttl" id="mttl">Nueva tarea</span>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fgroup">
+      <label class="flbl2">Título</label>
+      <input class="finput" type="text" id="ft" placeholder="Describí la tarea...">
+    </div>
+    <div class="fgroup">
+      <label class="flbl2">Detalle</label>
+      <textarea class="finput" id="fd" placeholder="Contexto, pasos, notas..."></textarea>
+    </div>
+    <div class="frow">
+      <div class="fgroup">
+        <label class="flbl2">Área</label>
+        <select class="finput" id="fa">
+          <option value="ventas">Ventas</option>
+          <option value="mkt">Marketing</option>
+          <option value="serv">Servicio</option>
+          <option value="mant">Mantenimiento y limpieza</option>
+          <option value="ch">Capital humano</option>
+          <option value="adm">Adm. y finanzas</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label class="flbl2">Prioridad</label>
+        <select class="finput" id="fp">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fgroup">
+        <label class="flbl2">Responsable</label>
+        <input class="finput" type="text" id="fo" placeholder="Nombre o iniciales">
+      </div>
+      <div class="fgroup">
+        <label class="flbl2">Fecha de entrega</label>
+        <input class="finput" type="date" id="ff">
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="btn" style="border-color:var(--bor2);background:var(--sur);color:var(--mut)" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-dark" onclick="saveCard()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── FIREBASE ───
+const FB = {
+  apiKey: "AIzaSyBLpRBQgIwXg8cMOMnUW_EMwipbC9GBBBM",
+  authDomain: "form---operaciones.firebaseapp.com",
+  projectId: "form---operaciones",
+  storageBucket: "form---operaciones.firebasestorage.app",
+  messagingSenderId: "103920748048",
+  appId: "1:103920748048:web:6a03966838b14b01e4ac95"
+};
+firebase.initializeApp(FB);
+const db = firebase.firestore();
+const COL = 'tareas';
+
+// ─── CONFIG ───
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DOW = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const NOW = new Date();
+let calY = NOW.getFullYear(), calM = NOW.getMonth();
+
+const COLS = [
+  {id:'todo',    lbl:'Por hacer'},
+  {id:'doing',   lbl:'En proceso'},
+  {id:'waiting', lbl:'Esperando algo'},
+  {id:'done',    lbl:'Listo'}
+];
+const AM = {
+  ventas: {lbl:'Ventas',           cls:'a-ventas', tc:'t-ventas', dot:'#4a8a1a'},
+  mkt:    {lbl:'Marketing',        cls:'a-mkt',    tc:'t-mkt',    dot:'#2070c0'},
+  serv:   {lbl:'Servicio',         cls:'a-serv',   tc:'t-serv',   dot:'#c87000'},
+  mant:   {lbl:'Mant. y limpieza', cls:'a-mant',   tc:'t-mant',   dot:'#c83030'},
+  ch:     {lbl:'Capital humano',   cls:'a-ch',     tc:'t-ch',     dot:'#6040c0'},
+  adm:    {lbl:'Adm. y finanzas',  cls:'a-adm',    tc:'t-adm',    dot:'#1a9060'}
+};
+const NXT = {todo:'doing', doing:'waiting', waiting:'done', done:null};
+const PRV = {todo:null, doing:'todo', waiting:'doing', done:'waiting'};
+const NXTL = {todo:'→ En proceso', doing:'→ Esperando', waiting:'→ Listo', done:null};
+const PRVL = {todo:null, doing:'← Por hacer', waiting:'← En proceso', done:'← Esperando'};
+
+let cards = [];
+let expanded = new Set();
+let curView = 'kanban';
+let aFilters = [], pFilters = [];
+let editId = null, addCol = 'todo';
+
+// ─── FIREBASE CRUD ───
+function fbSet(id, data){ return db.collection(COL).doc(id).set(data); }
+function fbUpdate(id, data){ return db.collection(COL).doc(id).update(data); }
+function fbDelete(id){ return db.collection(COL).doc(id).delete(); }
+
+// ─── INIT — escucha cambios en tiempo real ───
+function init(){
+  db.collection(COL).onSnapshot(
+    snap => {
+      cards = snap.docs.map(d => ({...d.data(), id: d.id}));
+      render();
+    },
+    err => {
+      console.error(err);
+      toast('Error de conexión: ' + err.code);
+    }
+  );
+}
+
+// ─── VIEWS ───
+function setView(v){
+  curView = v;
+  ['kanban','calendar','dashboard'].forEach(id => {
+    document.getElementById('view-'+id).style.display = id===v ? 'block' : 'none';
+    document.getElementById('btn-'+id).classList.toggle('on', id===v);
+  });
+  if(v==='calendar') renderCal();
+  if(v==='dashboard') renderDash();
+}
+
+// ─── FILTERS ───
+function toggleF(a){
+  const i = aFilters.indexOf(a);
+  if(i>-1) aFilters.splice(i,1); else aFilters.push(a);
+  document.querySelectorAll('.fbtn').forEach(b => {
+    if(b.classList.contains('fa-'+a)) b.classList.toggle('on', aFilters.includes(a));
+  });
+  render();
+}
+function toggleP(p){
+  const i = pFilters.indexOf(p);
+  if(i>-1) pFilters.splice(i,1); else pFilters.push(p);
+  document.querySelectorAll('.fbtn').forEach(b => {
+    if(b.classList.contains('fp-'+p)) b.classList.toggle('on', pFilters.includes(p));
+  });
+  render();
+}
+function vis(c){
+  return (aFilters.length===0 || aFilters.includes(c.area)) &&
+         (pFilters.length===0 || pFilters.includes(c.prio));
+}
+
+// ─── DATE HELPERS ───
+function pDate(s){
+  if(!s) return null;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+    const [y,m,d] = s.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  return null;
+}
+function fDate(d){
+  if(!d) return '—';
+  return d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];
+}
+function toISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// ─── RENDER ───
+function render(){
+  renderKanban();
+  renderStats();
+  if(curView==='calendar') renderCal();
+  if(curView==='dashboard') renderDash();
+}
+
+function renderStats(){
+  const v = cards.filter(vis);
+  const done = v.filter(c=>c.col==='done').length;
+  const pct = v.length ? Math.round(done/v.length*100) : 0;
+  const today = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  const ov = v.filter(c=>{ const d=pDate(c.date); return d&&d<today&&c.col!=='done'; }).length;
+  const sb = document.getElementById('sbar');
+  sb.innerHTML =
+    '<span><span class="snum">'+v.length+'</span> tareas</span>'+
+    '<span><span class="snum green">'+pct+'%</span> completado</span>'+
+    '<span><span class="snum">'+v.filter(c=>c.col!=='done').length+'</span> en curso</span>'+
+    '<span><span class="snum">'+v.filter(c=>c.prio==='alta'&&c.col!=='done').length+'</span> alta prioridad</span>'+
+    (ov ? '<span><span class="snum red">'+ov+'</span> vencidas</span>' : '');
+}
+
+function renderKanban(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  COLS.forEach(col => {
+    const colCards = cards.filter(c => c.col===col.id);
+    const visCards = colCards.filter(vis);
+    const div = document.createElement('div');
+    div.className = 'col';
+    div.innerHTML = '<div class="col-hdr"><span class="col-ttl">'+col.lbl+'</span><span class="col-cnt">'+visCards.length+'</span></div>';
+
+    if(visCards.length===0 && aFilters.length===0 && pFilters.length===0){
+      const em = document.createElement('div');
+      em.className = 'empty';
+      em.textContent = 'Sin tareas';
+      div.appendChild(em);
+    }
+
+    colCards.forEach(card => {
+      if(!vis(card)) return;
+      const m = AM[card.area] || AM.ventas;
+      const el = document.createElement('div');
+      el.className = 'card';
+      const dObj = pDate(card.date);
+      const dStr = dObj ? fDate(dObj) : '—';
+      const isOpen = expanded.has(card.id);
+      const det = card.detail||'';
+      el.innerHTML =
+        '<div class="ctop">'+
+          '<span class="apill '+m.cls+'">'+m.lbl+'</span>'+
+          '<span class="ppill p-'+card.prio+'">'+card.prio.toUpperCase()+'</span>'+
+        '</div>'+
+        '<div class="ctitle">'+card.title+'</div>'+
+        '<div class="cfields">'+
+          '<div><div class="flabel">Responsable</div><div class="fval">'+(card.owner||'—')+'</div></div>'+
+          '<div><div class="flabel">Entrega</div><div class="fval">'+dStr+'</div></div>'+
+        '</div>'+
+        '<button class="dtoggle'+(isOpen?' on':'')+'" onclick="toggleDet(\''+card.id+'\',event)">'+
+          '<span class="darr">&#9658;</span>&nbsp;<span id="dlbl-'+card.id+'">'+(isOpen?'Ocultar':'Ver detalle')+'</span>'+
+        '</button>'+
+        '<div class="dbody'+(isOpen?' on':'')+'" id="db-'+card.id+'">'+
+          '<div class="dinner">'+(det||'<em style="color:var(--sub)">Sin descripción.</em>')+'</div>'+
+        '</div>'+
+        '<div class="cacts">'+
+          (PRV[card.col]?'<button class="mbtn" onclick="move(\''+card.id+'\',\''+PRV[card.col]+'\',event)">'+PRVL[card.col]+'</button>':'')+
+          (NXT[card.col]?'<button class="mbtn" onclick="move(\''+card.id+'\',\''+NXT[card.col]+'\',event)">'+NXTL[card.col]+'</button>':'')+
+          '<button class="ebtn" onclick="openEdit(\''+card.id+'\',event)">Editar</button>'+
+          '<button class="dbtn" onclick="del(\''+card.id+'\',event)">✕</button>'+
+        '</div>';
+      div.appendChild(el);
+    });
+
+    const add = document.createElement('button');
+    add.className = 'addbtn';
+    add.textContent = '+ Nueva tarea';
+    add.onclick = () => openAdd(col.id);
+    div.appendChild(add);
+    board.appendChild(div);
+  });
+}
+
+function toggleDet(id, e){
+  e.stopPropagation();
+  if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
+  const open = expanded.has(id);
+  const btn = document.querySelector('.dtoggle[onclick*="\''+id+'\'"]');
+  const body = document.getElementById('db-'+id);
+  const lbl = document.getElementById('dlbl-'+id);
+  if(btn) btn.classList.toggle('on', open);
+  if(body) body.classList.toggle('on', open);
+  if(lbl) lbl.textContent = open ? 'Ocultar' : 'Ver detalle';
+}
+
+// ─── CALENDAR ───
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function calToday(){ calY=NOW.getFullYear(); calM=NOW.getMonth(); renderCal(); }
+
+function renderCal(){
+  document.getElementById('calmon').textContent = MONTHS[calM]+' '+calY;
+  const grid = document.getElementById('calgrid');
+  grid.innerHTML = '';
+  DOW.forEach(d => { const h=document.createElement('div');h.className='caldow';h.textContent=d;grid.appendChild(h); });
+
+  const taskMap = {};
+  cards.filter(vis).forEach(c => {
+    const d = pDate(c.date); if(!d) return;
+    const k = toISO(d);
+    if(!taskMap[k]) taskMap[k] = [];
+    taskMap[k].push(c);
+  });
+
+  const first = new Date(calY, calM, 1).getDay();
+  const daysInMonth = new Date(calY, calM+1, 0).getDate();
+  const todayStr = toISO(NOW);
+  const total = Math.ceil((first+daysInMonth)/7)*7;
+
+  for(let i=0; i<total; i++){
+    const cell = document.createElement('div');
+    cell.className = 'calday';
+    let day, ds;
+    if(i < first){
+      day = new Date(calY, calM, 0).getDate() - (first-1-i);
+      ds = calY+'-'+String(calM===0?12:calM).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      cell.classList.add('other');
+    } else if(i >= first+daysInMonth){
+      day = i-first-daysInMonth+1;
+      ds = calY+'-'+String(calM===11?1:calM+2).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      cell.classList.add('other');
+    } else {
+      day = i-first+1;
+      ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    }
+    if(ds===todayStr) cell.classList.add('today');
+    const n = document.createElement('div'); n.className='cdnum'; n.textContent=day; cell.appendChild(n);
+    const t = taskMap[ds]||[];
+    t.slice(0,3).forEach(c => {
+      const el=document.createElement('div'); el.className='ctask '+AM[c.area].tc;
+      el.title=c.title; el.textContent=c.title;
+      el.onclick=e=>{e.stopPropagation();openEdit(c.id,e);}; cell.appendChild(el);
+    });
+    if(t.length>3){ const m=document.createElement('div');m.className='cmore';m.textContent='+'+(t.length-3)+' más';cell.appendChild(m); }
+    grid.appendChild(cell);
+  }
+  renderUpcoming();
+}
+
+function renderUpcoming(){
+  const p = document.getElementById('calupcoming'); p.innerHTML='';
+  const today = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  const up = cards.filter(c=>vis(c)&&c.col!=='done')
+    .map(c=>({c, d:pDate(c.date)})).filter(x=>x.d).sort((a,b)=>a.d-b.d).slice(0,8);
+  if(!up.length){ p.innerHTML='<div style="color:var(--sub);font-size:13px;font-style:italic;padding:10px 0">Sin vencimientos próximos</div>'; return; }
+  up.forEach(({c,d}) => {
+    const diff = Math.round((d-today)/(86400000));
+    let cls='lt', lbl=fDate(d);
+    if(diff<0){cls='ov';lbl='Vencida: '+lbl;}
+    else if(diff===0){cls='tod';lbl='Hoy — '+lbl;}
+    else if(diff<=3){cls='sn';lbl='En '+diff+' días — '+lbl;}
+    const el=document.createElement('div'); el.className='cscard'; el.onclick=e=>openEdit(c.id,e);
+    el.innerHTML='<span class="apill '+AM[c.area].cls+'" style="font-size:10px;margin-bottom:4px;display:inline-block">'+AM[c.area].lbl+'</span>'+
+      '<div class="ctitle" style="font-size:12px;margin-bottom:4px">'+c.title+'</div>'+
+      '<div class="csdate '+cls+'">'+lbl+'</div>'+
+      '<div style="font-size:11px;color:var(--mut);margin-top:3px">'+(c.owner||'—')+'</div>';
+    p.appendChild(el);
+  });
+}
+
+// ─── DASHBOARD ───
+function renderDash(){
+  const v = cards.filter(vis);
+  const total = v.length;
+  const done = v.filter(c=>c.col==='done').length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const today = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  const ov = v.filter(c=>{const d=pDate(c.date);return d&&d<today&&c.col!=='done';}).length;
+  const alta = v.filter(c=>c.prio==='alta'&&c.col!=='done').length;
+
+  document.getElementById('kpis').innerHTML =
+    kpi('Total',total,'','—') + kpi('Completadas',done,'g',done+'/'+total) +
+    kpi('En curso',v.filter(c=>c.col!=='done').length,'','') +
+    kpi('Alta prioridad',alta,alta>0?'a':'','pendientes') +
+    kpi('Vencidas',ov,ov>0?'r':'g',ov>0?'revisar':'al día');
+
+  const circ = 276.5;
+  const fg = document.getElementById('circfg');
+  fg.style.strokeDashoffset = circ;
+  setTimeout(()=>fg.style.strokeDashoffset = circ-(circ*pct/100), 50);
+  document.getElementById('circpct').textContent = pct+'%';
+
+  const colColors = {todo:'#b8b6af',doing:'#2070c0',waiting:'#c87000',done:'#22c55e'};
+  const colLbls = {todo:'Por hacer',doing:'En proceso',waiting:'Esperando',done:'Listo'};
+  let cb='<div style="display:flex;flex-direction:column;gap:8px">';
+  COLS.forEach(col=>{
+    const n=v.filter(c=>c.col===col.id).length;
+    const p=total?Math.round(n/total*100):0;
+    cb+=bar(colLbls[col.id],n,total,p,colColors[col.id]);
+  });
+  document.getElementById('colbars').innerHTML=cb+'</div>';
+
+  let ab='';
+  Object.keys(AM).forEach(a=>{
+    const m=AM[a]; const ac=v.filter(c=>c.area===a);
+    const ad=ac.filter(c=>c.col==='done').length;
+    const ap=ac.length?Math.round(ad/ac.length*100):0;
+    ab+='<div class="barrow"><div class="barmeta"><span><span class="adot" style="background:'+m.dot+'"></span>'+m.lbl+'</span><span class="barpct">'+ad+'/'+ac.length+' · '+ap+'%</span></div><div class="barbg"><div class="barfill" style="width:'+ap+'%;background:'+m.dot+'"></div></div></div>';
+  });
+  document.getElementById('areabars').innerHTML=ab;
+
+  const pd=[{k:'alta',l:'Alta',c:'#c83030',bg:'#fde8e8'},{k:'media',l:'Media',c:'#c87000',bg:'#fef3e2'},{k:'baja',l:'Baja',c:'#4a8a1a',bg:'#eaf3de'}];
+  const mx=Math.max(...pd.map(p=>v.filter(c=>c.prio===p.k).length),1);
+  document.getElementById('priobars').innerHTML=pd.map(p=>{
+    const n=v.filter(c=>c.prio===p.k).length;
+    const h=Math.max(Math.round(n/mx*64),4);
+    return '<div class="pbcol"><span class="pbnum">'+n+'</span><div class="pbfill" style="height:'+h+'px;background:'+p.bg+';border:1px solid '+p.c+'22"></div><span class="pblbl">'+p.l+'</span></div>';
+  }).join('');
+
+  const om={};
+  v.forEach(c=>{if(!om[c.owner])om[c.owner]={t:0,d:0};om[c.owner].t++;if(c.col==='done')om[c.owner].d++;});
+  const ow=Object.keys(om).sort((a,b)=>om[b].t-om[a].t);
+  document.getElementById('ownerbars').innerHTML=ow.map(o=>{
+    const x=om[o]; const p=x.t?Math.round(x.d/x.t*100):0;
+    const bc=p===100?'#22c55e':p>=50?'#4a8a1a':'#2070c0';
+    return '<div class="barrow"><div class="barmeta"><span>'+o+'</span><span class="barpct">'+x.d+'/'+x.t+' · '+p+'%</span></div><div class="barbg"><div class="barfill" style="width:'+p+'%;background:'+bc+'"></div></div></div>';
+  }).join('');
+}
+
+function bar(lbl,n,tot,p,color){
+  return '<div><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px"><span>'+lbl+'</span><span style="color:var(--mut)">'+n+' · '+p+'%</span></div><div class="barbg"><div class="barfill" style="width:'+p+'%;background:'+color+'"></div></div></div>';
+}
+function kpi(lbl,num,c,sub){
+  return '<div class="kpi"><div class="kpilbl">'+lbl+'</div><div class="kpinum '+c+'">'+num+'</div><div class="kpisub">'+sub+'</div></div>';
+}
+
+// ─── WHATSAPP ───
+function sendWA(){
+  const d=cards.filter(c=>c.col==='done');
+  const t=cards.length;
+  const p=t?Math.round(d.length/t*100):0;
+  const now=new Date();
+  const ds=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
+  let msg='✅ *GOIAK — Tareas completadas*\n📅 '+ds+'\n━━━━━━━━━━━━━━━━━━\n\n';
+  msg+='📊 *Avance: '+p+'% ('+d.length+'/'+t+')*\n\n';
+  const byA={};
+  d.forEach(c=>{if(!byA[c.area])byA[c.area]=[];byA[c.area].push(c);});
+  Object.keys(byA).forEach(a=>{
+    msg+='*'+AM[a].lbl+'*\n';
+    byA[a].forEach(c=>msg+='  • '+c.title+' ('+c.owner+')\n');
+    msg+='\n';
+  });
+  const pen=cards.filter(c=>c.col!=='done');
+  msg+='━━━━━━━━━━━━━━━━━━\n⏳ Pendientes: '+pen.length+'\n';
+  const al=pen.filter(c=>c.prio==='alta');
+  if(al.length) msg+='🔴 Alta prioridad: '+al.length;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ─── CRUD ───
+function move(id, toCol, e){
+  e.stopPropagation();
+  fbUpdate(id, {col:toCol})
+    .then(()=>toast('Tarea movida'))
+    .catch(err=>toast('Error: '+err.message));
+}
+
+function del(id, e){
+  e.stopPropagation();
+  if(!confirm('¿Eliminar esta tarea?')) return;
+  fbDelete(id)
+    .then(()=>{ expanded.delete(id); toast('Eliminada'); })
+    .catch(err=>toast('Error: '+err.message));
+}
+
+function openAdd(col){
+  editId=null; addCol=col;
+  document.getElementById('mttl').textContent='Nueva tarea';
+  ['ft','fd','fo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ff').value='';
+  document.getElementById('fa').value='ventas';
+  document.getElementById('fp').value='media';
+  document.getElementById('overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('ft').focus(),80);
+}
+
+function openEdit(id, e){
+  if(e) e.stopPropagation();
+  editId=id;
+  const c=cards.find(c=>c.id===id);
+  if(!c) return;
+  document.getElementById('mttl').textContent='Editar tarea';
+  document.getElementById('ft').value=c.title||'';
+  document.getElementById('fd').value=c.detail||'';
+  document.getElementById('fo').value=c.owner||'';
+  document.getElementById('ff').value=c.date||'';
+  document.getElementById('fa').value=c.area||'ventas';
+  document.getElementById('fp').value=c.prio||'media';
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('on');
+  editId=null;
+}
+
+function saveCard(){
+  const title=document.getElementById('ft').value.trim();
+  if(!title){ document.getElementById('ft').focus(); return; }
+
+  const isEdit = !!editId;
+  const docId  = editId || String(Date.now());
+
+  const data = {
+    id:     docId,
+    title,
+    detail: document.getElementById('fd').value.trim(),
+    owner:  document.getElementById('fo').value.trim()||'—',
+    date:   document.getElementById('ff').value||'',
+    area:   document.getElementById('fa').value,
+    prio:   document.getElementById('fp').value,
+  };
+
+  if(!isEdit){
+    data.col    = addCol;
+    data.urgent = false;
+  }
+
+  closeModal();
+
+  db.collection(COL).doc(docId).set(data, {merge:true})
+    .then(()=>toast(isEdit ? 'Tarea actualizada ✓' : 'Tarea agregada ✓'))
+    .catch(err=>toast('Error: '+err.message));
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2200);
+}
+
+document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// ─── START ───
+init();
+</script>
+</body>
+</html>
